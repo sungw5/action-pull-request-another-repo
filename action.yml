@@ -32,6 +32,9 @@ inputs:
   commit_msg:
     description: "The commit message that will be pushed to the destination repo"
     required: false
+  overwrite_branch:
+    description: "Overwrite the destination_head_branch if it exists. If false, it will create a new branch"
+    required: false
   pull_request_reviewers:
     description: "Pull request reviewers users"
     required: false
@@ -49,6 +52,7 @@ runs:
     - ${{ inputs.pr-title }}
     - ${{ inputs.pr-body }}
     - ${{ inputs.commit-msg }}
+    - ${{ inputs.overwrite-branch }}
     - ${{ inputs.pull-request-reviewers }}
 branding:
   icon: "git-commit"

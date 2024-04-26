@@ -39,11 +39,12 @@ This GitHub Action copies a folder from the current repository to a location in 
 - destination_folder: [optional] The folder in the destination repository to place the file in, if not the root directory.
 - user_email: The GitHub user email associated with the API token secret.
 - user_name: The GitHub username associated with the API token secret.
-- destination_base_branch: [optional] The branch into which you want your code merged. Default is `main`.
+- destination_base_branch: [optional] The branch into which you want your code merged. Default is `main or master`.
 - destination_head_branch: The branch to create to push the changes. Cannot be `master` or `main`.
 - pr_title : [optional] The pull request title. Default is destination head branch name.
-- pr_body : [optional] The pull request body. Default is destination head branch name.
+- pr_body : [optional] The pull request body. Default is "Update from {commit link}
 - commit_msg: [optional] The commit message. Default is destination head branch name.
+- overwrite_branch : [optional] If the destination head branch already exists, it will be deleted and recreated. If false, it will create a new branch named destination_head_branch + date. Default is "false". The value should be double quoted.
 - pull_request_reviewers: [optional] The pull request reviewers. It can be only one (just like 'reviewer') or many (just like 'reviewer1,reviewer2,...')
 
 ## ENV

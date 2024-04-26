@@ -40,6 +40,12 @@ then
     COMMIT_MSG=$INPUT_DESTINATION_HEAD_BRANCH
 fi
 
+OVERWRITE_BRANCH=$INPUT_OVERWRITE_BRANCH
+if [ -z $INPUT_OVERWRITE_BRANCH ]
+then
+    OVERWRITE_BRANCH="false"
+fi
+
 CLONE_DIR=$(mktemp -d)
 
 echo "Setting git variables"
@@ -59,11 +65,18 @@ echo "Checking if branch already exists"
 git fetch -a
 BRANCH_EXISTS=$(git show-ref "$INPUT_DESTINATION_HEAD_BRANCH" | wc -l)
 
-git stash
-git clean -f
 if [ $BRANCH_EXISTS -gt 0 ];
 then
-    git checkout "$INPUT_DESTINATION_HEAD_BRANCH"
+    if [ $OVERWRITE_BRANCH == "true" ];
+    then
+        echo "Branch already exists, recreate it"
+        git push origin --delete $INPUT_DESTINATION_HEAD_BRANCH
+        git branch -D $INPUT_DESTINATION_HEAD_BRANCH
+        git checkout -b "$INPUT_DESTINATION_HEAD_BRANCH"
+    else
+        echo "Branch already exists, create a new branch with date suffix"
+        git checkout -b "$INPUT_DESTINATION_HEAD_BRANCH-$(date '+%m-%d-%Y')"
+    fi
 else
     git checkout -b "$INPUT_DESTINATION_HEAD_BRANCH"
 fi
