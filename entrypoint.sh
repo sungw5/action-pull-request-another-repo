@@ -22,6 +22,24 @@ else
   PULL_REQUEST_REVIEWERS='-r '$INPUT_PULL_REQUEST_REVIEWERS
 fi
 
+PR_TITLE=$INPUT_PR_TITLE
+if [ -z $INPUT_PR_TITLE ]
+then
+    PR_TITLE=$INPUT_DESTINATION_HEAD_BRANCH
+fi
+
+PR_BODY=$INPUT_PR_BODY
+if [ -z $INPUT_PR_BODY ]
+then
+    PR_BODY=$INPUT_DESTINATION_HEAD_BRANCH
+fi
+
+COMMIT_MSG=$INPUT_COMMIT_MSG
+if [ -z $INPUT_COMMIT_MSG ]
+then
+    COMMIT_MSG="Update from https://$INPUT_GITHUB_SERVER/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
+fi
+
 CLONE_DIR=$(mktemp -d)
 
 echo "Setting git variables"
@@ -36,18 +54,28 @@ echo "Copying contents to git repo"
 mkdir -p $CLONE_DIR/$INPUT_DESTINATION_FOLDER/
 cp -r $INPUT_SOURCE_FOLDER "$CLONE_DIR/$INPUT_DESTINATION_FOLDER/"
 cd "$CLONE_DIR"
-git checkout -b "$INPUT_DESTINATION_HEAD_BRANCH"
+
+git fetch -a
+BRANCH_EXISTS=$(git show-ref "$INPUT_DESTINATION_HEAD_BRANCH" | wc -l)
+if [ $BRANCH_EXISTS == 0];
+then
+  echo "Creating branch $INPUT_DESTINATION_HEAD_BRANCH"
+  git checkout -b "$INPUT_DESTINATION_HEAD_BRANCH"
+else
+  echo "checkout to $INPUT_DESTINATION_HEAD_BRANCH"
+  git checkout "$INPUT_DESTINATION_HEAD_BRANCH"
+fi
 
 echo "Adding git commit"
 git add .
 if git status | grep -q "Changes to be committed"
 then
-  git commit --message "Update from https://github.com/$GITHUB_REPOSITORY/commit/$GITHUB_SHA"
+  git commit --message "$COMMIT_MSG"
   echo "Pushing git commit"
   git push -u origin HEAD:$INPUT_DESTINATION_HEAD_BRANCH
   echo "Creating a pull request"
-  gh pr create -t $INPUT_DESTINATION_HEAD_BRANCH \
-               -b $INPUT_DESTINATION_HEAD_BRANCH \
+  gh pr create -t "$PR_TITLE" \
+               -b "$PR_BODY" \
                -B $INPUT_DESTINATION_BASE_BRANCH \
                -H $INPUT_DESTINATION_HEAD_BRANCH \
                   $PULL_REQUEST_REVIEWERS
