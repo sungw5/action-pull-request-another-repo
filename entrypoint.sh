@@ -40,6 +40,8 @@ then
     COMMIT_MSG=$INPUT_DESTINATION_HEAD_BRANCH
 fi
 
+DESTINATION_HEAD_BRANCH=$INPUT_DESTINATION_HEAD_BRANCH
+
 CLONE_DIR=$(mktemp -d)
 
 echo "Setting git variables"
@@ -57,15 +59,15 @@ cd "$CLONE_DIR"
 
 echo "Checking if branch already exists"
 git fetch -a
-BRANCH_EXISTS=$(git show-ref "$INPUT_DESTINATION_HEAD_BRANCH" | wc -l)
+BRANCH_EXISTS=$(git show-ref "$DESTINATION_HEAD_BRANCH" | wc -l)
 
 if [ $BRANCH_EXISTS -gt 0 ];
 then
     echo "Branch already exists, create a new branch with date suffix"
-    git checkout -b "$INPUT_DESTINATION_HEAD_BRANCH-$(date '+%m-%d-%Y')"
-else
-    git checkout -b "$INPUT_DESTINATION_HEAD_BRANCH"
+    DESTINATION_HEAD_BRANCH="$INPUT_DESTINATION_HEAD_BRANCH-$(date '+%m-%d-%Y')"
 fi
+
+git checkout -b "$DESTINATION_HEAD_BRANCH"
 
 echo "Adding git commit"
 git add .
@@ -73,12 +75,12 @@ if git status | grep -q "Changes to be committed"
 then
   git commit --message "$COMMIT_MSG"
   echo "Pushing git commit"
-  git push -u origin HEAD:$INPUT_DESTINATION_HEAD_BRANCH
+  git push -u origin HEAD:$DESTINATION_HEAD_BRANCH
   echo "Creating a pull request"
   gh pr create -t "$PR_TITLE" \
                -b "$PR_BODY" \
                -B $INPUT_DESTINATION_BASE_BRANCH \
-               -H $INPUT_DESTINATION_HEAD_BRANCH \
+               -H $DESTINATION_HEAD_BRANCH \
                   $PULL_REQUEST_REVIEWERS
 else
   echo "No changes detected"
